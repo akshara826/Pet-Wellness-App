@@ -3,6 +3,7 @@ package com.petcare.petwellness.Config;
 import com.petcare.petwellness.Util.JwtUtil;
 import com.petcare.petwellness.Domain.Entity.User;
 import com.petcare.petwellness.Repository.UserRepository;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,6 +28,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                    UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String servletPath = request.getServletPath();
+        return HttpMethod.OPTIONS.matches(request.getMethod()) || servletPath.startsWith("/api/auth/");
     }
 
     @Override

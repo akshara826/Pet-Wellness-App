@@ -23,15 +23,15 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 15MB
-      max-request-size: 20MB
+      max-file-size: 25MB
+      max-request-size: 35MB
       
 
   mail:
     host: smtp.gmail.com
     port: 587
     username: vishwakarmasahil643@gmail.com
-    password: ${MAIL_APP_PASSWORD}
+    password: bglnkijuojkwcego
     properties:
       mail:
         smtp:
