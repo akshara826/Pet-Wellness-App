@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface AdminService {
 
-    List<PendingUserResponseDto> getPendingUsers();
+    List<PendingUserResponseDto> getPendingUsers(int offset, int limit);
 
-    List<ApprovedUserResponseDto> getApprovedUsers();
+    List<ApprovedUserResponseDto> getApprovedUsers(int offset, int limit);
 
     AdminUserProfileResponseDto getUserProfile(Long userId);
 

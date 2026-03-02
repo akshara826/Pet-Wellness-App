@@ -32,13 +32,17 @@ public class AdminController {
     }
 
     @GetMapping("/pending-users")
-    public ResponseEntity<List<PendingUserResponseDto>> getPendingUsers() {
-        return ResponseEntity.ok(adminService.getPendingUsers());
+    public ResponseEntity<List<PendingUserResponseDto>> getPendingUsers(
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(adminService.getPendingUsers(offset, limit));
     }
 
     @GetMapping("/approved-users")
-    public ResponseEntity<List<ApprovedUserResponseDto>> getApprovedUsers() {
-        return ResponseEntity.ok(adminService.getApprovedUsers());
+    public ResponseEntity<List<ApprovedUserResponseDto>> getApprovedUsers(
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(adminService.getApprovedUsers(offset, limit));
     }
 
     @GetMapping("/users/{userId}/profile")
