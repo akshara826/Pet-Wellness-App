@@ -70,14 +70,14 @@ public class MedicalHistory {
     @Column(length = 255)
     private String medication;
 
-    @NotBlank
+    @NotNull
     @Positive
     @Column(name = "weight_at_visit", precision = 5, scale = 2 , nullable = false)
     private BigDecimal weight;
 
     @NotBlank
     @Size(max = 255)
-    @Column(name = "prescription_file_path", length = 255 ,nullable = false)
+    @Column(name = "prescription_file_path", length = 255, nullable = false)
     private String prescriptionFile;
 
     @Column(name = "next_visit_date")

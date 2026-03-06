@@ -6,18 +6,15 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-public class VaccinationRequestDto {
+public class VaccinationUpdateRequestDto {
 
-    @NotBlank
+    
     @Size(max = 255)
     private String vaccineName;
 
-    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate vaccinationDate;
 
@@ -27,14 +24,13 @@ public class VaccinationRequestDto {
     @Positive
     private Integer doseNumber;
 
-    @NotBlank
     @Size(max = 255)
     private String veterinarianName;
 
     @Size(max = 1000)
     private String notes;
 
-    @NotNull
+    
     @Schema(type = "string", format = "binary")
     private MultipartFile prescriptionFile;
 

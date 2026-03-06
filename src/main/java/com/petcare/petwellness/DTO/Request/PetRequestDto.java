@@ -1,4 +1,4 @@
-package com.petcare.petwellness.DTO.Request;
+﻿package com.petcare.petwellness.DTO.Request;
 
 
 import java.math.BigDecimal;
@@ -26,14 +26,13 @@ public class PetRequestDto {
     @NotNull
     private PetGender gender;
 
-    @NotBlank
+    @NotNull
     @Past
     private LocalDate dateOfBirth;
 
     @Positive
     private BigDecimal weight;
 
-    @NotBlank
     @NotNull(message = "Pet image is required")
     private MultipartFile image;
 
@@ -96,3 +95,4 @@ public class PetRequestDto {
     
     
 }
+
