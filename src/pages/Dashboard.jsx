@@ -163,35 +163,7 @@ export default function Dashboard() {
           })
         );
 
-        const upcomingAppointments = hydrated
-          .flatMap((pet) =>
-            (pet.medicalHistory || [])
-              .filter((record) => record.nextVisitDate)
-              .map((record) => ({
-                id: `${pet.id}-${record.id || record.nextVisitDate}`,
-                date: record.nextVisitDate,
-                title: "Next Checkup",
-                pet: pet.name,
-                doctor: record.doctorName || "Vet",
-                type: "Clinic",
-              }))
-          )
-          .filter((item) => new Date(item.date).getTime() >= Date.now() - 24 * 60 * 60 * 1000)
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-          .slice(0, 4)
-          .map((item) => {
-            const { month, day } = monthDay(item.date);
-            return {
-              id: item.id,
-              month,
-              day,
-              title: item.title,
-              pet: item.pet,
-              doctor: item.doctor,
-              time: "TBD",
-              type: item.type,
-            };
-          });
+        const upcomingAppointments = [];
 
         const vaxReminders = hydrated
           .flatMap((pet) =>
@@ -263,8 +235,8 @@ export default function Dashboard() {
   }, []);
 
   const dueVaccinesCount = useMemo(
-    () => vaccines.filter((item) => item.status === "Overdue" || item.status === "Soon").length,
-    [vaccines]
+    () => pets.filter((pet) => String(pet.statusType || "").toLowerCase() === "warning").length,
+    [pets]
   );
 
   const statItems = useMemo(

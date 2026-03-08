@@ -57,6 +57,9 @@ export function mapPetResponse(dto) {
 export function mapMedicalHistoryResponse(dto) {
   return {
     id: dto.id,
+    conditionName: dto.conditionName || "",
+    diagnosisDate: dto.diagnosisDate || "",
+    notes: dto.notes || "",
     visitDate: dto.visitDate || "",
     doctorName: dto.doctorName || "",
     clinicName: dto.clinicName || "",
@@ -76,6 +79,7 @@ export function mapVaccinationResponse(dto) {
     name: dto.vaccineName || "",
     date: dto.vaccinationDate || "",
     nextDueDate: dto.nextDueDate || null,
+    doseNumber: dto.doseNumber ? Number(dto.doseNumber) : 1,
     doctor: dto.veterinarianName || "",
     clinic: "",
     notes: dto.notes || "",
@@ -133,6 +137,23 @@ export async function fetchPetMedicalHistory(petId) {
 }
 
 export async function addMedicalHistoryRecord(petId, payload) {
+  if (payload?.isEditing && payload?.editId) {
+    const formData = new FormData();
+    formData.append("visitDate", payload.visitDate);
+    formData.append("doctorName", payload.doctorName);
+    formData.append("clinicName", payload.clinicName || "");
+    formData.append("symptoms", payload.symptoms);
+    formData.append("diagnosis", payload.diagnosis);
+    formData.append("treatment", payload.treatment);
+    formData.append("medication", payload.medication || "");
+    formData.append("weight", String(payload.weight));
+    if (payload.nextVisitDate) formData.append("nextVisitDate", payload.nextVisitDate);
+    if (payload.prescriptionFile) formData.append("prescriptionFile", payload.prescriptionFile);
+
+    const response = await updateMedicalHistory(payload.editId, formData);
+    return response.data;
+  }
+
   const formData = new FormData();
   formData.append("visitDate", payload.visitDate);
   formData.append("doctorName", payload.doctorName);
@@ -161,6 +182,20 @@ export async function fetchPetVaccinations(petId) {
 }
 
 export async function addVaccinationRecord(petId, payload) {
+  if (payload?.isEditing && payload?.editId) {
+    const formData = new FormData();
+    formData.append("vaccineName", payload.name);
+    formData.append("vaccinationDate", payload.date);
+    if (payload.nextDueDate) formData.append("nextDueDate", payload.nextDueDate);
+    formData.append("doseNumber", String(payload.doseNumber || 1));
+    formData.append("veterinarianName", payload.veterinarianName);
+    formData.append("notes", payload.notes || "");
+    if (payload.prescriptionFile) formData.append("prescriptionFile", payload.prescriptionFile);
+
+    const response = await updateVaccination(payload.editId, formData);
+    return response.data;
+  }
+
   const formData = new FormData();
   formData.append("vaccineName", payload.name);
   formData.append("vaccinationDate", payload.date);
@@ -177,6 +212,12 @@ export async function addVaccinationRecord(petId, payload) {
 export async function deleteVaccinationRecord(vaccinationId) {
   await API.delete(`/vaccinations/delete/${vaccinationId}`);
 }
+
+export const updateVaccination = (vaccinationId, data) =>
+  API.patch(`/vaccinations/Edit/${vaccinationId}`, data);
+
+export const updateMedicalHistory = (historyId, data) =>
+  API.patch(`/medical-history/Edit/${historyId}`, data);
 
 export async function downloadHealthReportPdf(petId) {
   const response = await API.get(`/reports/pet/${petId}/health-report`, {

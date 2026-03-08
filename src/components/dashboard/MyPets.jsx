@@ -42,16 +42,6 @@ export default function MyPets({ pets }) {
             </article>
           ))}
 
-          <button
-            type="button"
-            className="min-w-[140px] flex-1 rounded-2xl border border-dashed border-app-border bg-app-card p-4 text-center transition duration-200 hover:border-app-teal"
-          >
-            <p className="text-3xl text-app-slate">{"\uD83D\uDC3E"}</p>
-            <p className="mt-2 text-sm font-semibold text-app-slate">Add Pet</p>
-            <span className="mx-auto mt-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-app-teal text-xl font-bold text-white">
-              +
-            </span>
-          </button>
         </div>
       </div>
     </section>

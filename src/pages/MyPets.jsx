@@ -317,8 +317,10 @@ export default function MyPets() {
       setBusyAction(true);
       await addMedicalHistoryRecord(petId, record);
       await hydratePetDetails(petId);
+      return true;
     } catch (error) {
       alert(error?.response?.data?.message || "Failed to save medical history record.");
+      return false;
     } finally {
       setBusyAction(false);
     }
@@ -329,8 +331,10 @@ export default function MyPets() {
       setBusyAction(true);
       await addVaccinationRecord(petId, vaccination);
       await hydratePetDetails(petId);
+      return true;
     } catch (error) {
       alert(error?.response?.data?.message || "Failed to save vaccination record.");
+      return false;
     } finally {
       setBusyAction(false);
     }

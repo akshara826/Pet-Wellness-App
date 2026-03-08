@@ -18,28 +18,33 @@ function InputField({ label, required, optional, error, children }) {
         {optional ? <span className="text-[11px] font-normal text-app-slate">(optional)</span> : null}
       </label>
       {children}
-      {error ? <p className="mt-1 text-[11px] text-app-red">⚠ {error}</p> : null}
+      {error ? <p className="mt-1 text-[11px] text-app-red">{error}</p> : null}
     </div>
   );
 }
+
+const initialForm = {
+  visitDate: "",
+  doctorName: "",
+  clinicName: "",
+  weight: "",
+  symptoms: "",
+  diagnosis: "",
+  treatment: "",
+  medication: "",
+  nextVisitDate: "",
+  patchNotes: "",
+  prescriptionName: "",
+  prescriptionFile: null,
+};
 
 export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord, onDeleteRecord }) {
   const [expanded, setExpanded] = useState(true);
   const [savedState, setSavedState] = useState(false);
   const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({
-    visitDate: "",
-    doctorName: "",
-    clinicName: "",
-    weight: "",
-    symptoms: "",
-    diagnosis: "",
-    treatment: "",
-    medication: "",
-    nextVisitDate: "",
-    prescriptionName: "",
-    prescriptionFile: null,
-  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState(initialForm);
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   useEffect(() => {
@@ -47,12 +52,36 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
     setExpanded(!pet.medicalHistory?.length);
     setSavedState(false);
     setErrors({});
+    setIsEditing(false);
+    setEditId(null);
+    setForm(initialForm);
   }, [isOpen, pet]);
 
   if (!isOpen || !pet) return null;
 
   const inputCls =
     "w-full rounded-xl border-[1.5px] border-app-border bg-app-bg px-3.5 py-2.5 text-[13px] text-app-navy outline-none transition focus:border-app-teal focus:bg-white focus:shadow-[0_0_0_3px_rgba(45,212,160,0.12)]";
+
+  const startEdit = (item) => {
+    setIsEditing(true);
+    setEditId(item.id);
+    setExpanded(true);
+    setErrors({});
+    setForm({
+      visitDate: item.visitDate || "",
+      doctorName: item.doctorName || "",
+      clinicName: item.clinicName || "",
+      weight: item.weight ? String(item.weight) : "",
+      symptoms: item.symptoms || "",
+      diagnosis: item.diagnosis || "",
+      treatment: item.treatment || "",
+      medication: item.medication || "",
+      nextVisitDate: item.nextVisitDate || "",
+      patchNotes: item.notes || "",
+      prescriptionName: "",
+      prescriptionFile: null,
+    });
+  };
 
   const validate = () => {
     const next = {};
@@ -64,15 +93,16 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
     if (!form.treatment.trim()) next.treatment = "Treatment is required";
     if (!form.weight) next.weight = "Weight is required";
     if (form.weight && Number(form.weight) <= 0) next.weight = "Must be positive";
-    if (!form.prescriptionFile) next.prescriptionFile = "Prescription file is required";
+    if (!isEditing && !form.prescriptionFile) next.prescriptionFile = "Prescription file is required";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  const save = () => {
+  const save = async () => {
     if (!validate()) return;
-    onSaveRecord(pet.id, {
-      id: `m-${Date.now()}`,
+
+    const isSaved = await onSaveRecord(pet.id, {
+      id: isEditing ? editId : `m-${Date.now()}`,
       visitDate: form.visitDate,
       doctorName: form.doctorName.trim(),
       clinicName: form.clinicName.trim(),
@@ -84,20 +114,20 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
       nextVisitDate: form.nextVisitDate || "",
       prescriptionName: form.prescriptionName || "",
       prescriptionFile: form.prescriptionFile,
+      isEditing,
+      editId,
+      conditionName: form.diagnosis.trim(),
+      diagnosisDate: form.visitDate,
+      notes: form.patchNotes || "",
     });
-    setForm({
-      visitDate: "",
-      doctorName: "",
-      clinicName: "",
-      weight: "",
-      symptoms: "",
-      diagnosis: "",
-      treatment: "",
-      medication: "",
-      nextVisitDate: "",
-      prescriptionName: "",
-      prescriptionFile: null,
-    });
+    if (isSaved === false) return;
+
+    if (isEditing) {
+      onClose();
+      return;
+    }
+
+    setForm(initialForm);
     setSavedState(true);
     setTimeout(() => setSavedState(false), 1500);
   };
@@ -120,7 +150,7 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
               <h3 className="mt-2 text-xl font-extrabold text-app-navy">Medical History</h3>
               <p className="text-[13px] text-app-slate">Track vet visits, diagnoses and treatments</p>
             </div>
-            <button type="button" onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-app-bg text-lg text-app-slate transition hover:bg-app-red-light">✕</button>
+            <button type="button" onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-app-bg text-lg text-app-slate transition hover:bg-app-red-light">x</button>
           </div>
         </div>
 
@@ -131,30 +161,32 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
               {pet.medicalHistory.map((item) => (
                 <div key={item.id} className="rounded-xl border-l-[3px] border-app-teal bg-white px-4 py-3 shadow-[0_1px_4px_rgba(26,35,50,0.06)]">
                   <div className="flex items-center justify-between">
-                    <p className="text-[13px] font-bold text-app-navy">● {item.visitDate}</p>
-                    <button type="button" onClick={() => onDeleteRecord(pet.id, item.id)} className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm transition hover:bg-app-red-light">🗑</button>
+                    <p className="text-[13px] font-bold text-app-navy">{item.visitDate}</p>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => startEdit(item)} className="rounded-full border border-app-border px-3 py-1 text-xs font-bold text-app-teal transition hover:bg-app-teal-light">Edit</button>
+                      <button type="button" onClick={() => onDeleteRecord(pet.id, item.id)} className="rounded-full border border-app-border px-3 py-1 text-xs font-bold text-app-red transition hover:bg-app-red-light">Delete</button>
+                    </div>
                   </div>
-                  <p className="text-[13px] text-app-slate">👨‍⚕️ {item.doctorName}{item.clinicName ? ` · ${item.clinicName}` : ""}</p>
+                  <p className="text-[13px] text-app-slate">{item.doctorName}{item.clinicName ? ` - ${item.clinicName}` : ""}</p>
                   <p className="mt-2 text-sm font-bold text-app-navy">{item.diagnosis}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {item.treatment ? <span className="rounded-full bg-app-teal-light px-2.5 py-1 text-[11px] text-app-teal-dark">💊 {item.treatment}</span> : null}
-                    {item.medication ? <span className="rounded-full bg-app-blue-light px-2.5 py-1 text-[11px] text-app-blue">💉 {item.medication}</span> : null}
-                    {item.nextVisitDate ? <span className="rounded-full bg-app-yellow-light px-2.5 py-1 text-[11px] text-[#92400E]">📅 Next: {item.nextVisitDate}</span> : null}
+                    {item.treatment ? <span className="rounded-full bg-app-teal-light px-2.5 py-1 text-[11px] text-app-teal-dark">Treatment: {item.treatment}</span> : null}
+                    {item.medication ? <span className="rounded-full bg-app-blue-light px-2.5 py-1 text-[11px] text-app-blue">Medication: {item.medication}</span> : null}
+                    {item.nextVisitDate ? <span className="rounded-full bg-app-yellow-light px-2.5 py-1 text-[11px] text-[#92400E]">Next: {item.nextVisitDate}</span> : null}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="py-8 text-center">
-              <p className="animate-[pulse_2s_infinite] text-[40px]">📋</p>
               <p className="mt-2 text-base font-bold text-app-navy">No medical records yet</p>
               <p className="text-[13px] text-app-slate">Add the first vet visit record below</p>
             </div>
           )}
 
           <button type="button" onClick={() => setExpanded((prev) => !prev)} className="flex w-full items-center justify-between border-b border-app-border pb-2 text-left text-sm font-bold text-app-teal">
-            ＋ Add New Record
-            <span className={["transition", expanded ? "rotate-180" : ""].join(" ")}>⌄</span>
+            {isEditing ? "Edit Record" : "Add New Record"}
+            <span className={["transition", expanded ? "rotate-180" : ""].join(" ")}>^</span>
           </button>
 
           <div className={["overflow-hidden transition-[max-height] duration-300", expanded ? "max-h-[1400px]" : "max-h-0"].join(" ")}>
@@ -176,23 +208,23 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
               </div>
 
               <InputField label="Symptoms" required error={errors.symptoms}>
-                <textarea value={form.symptoms} onChange={(event) => setForm((prev) => ({ ...prev, symptoms: event.target.value }))} placeholder="Describe symptoms observed... (optional)" className={`${inputCls} min-h-[80px] resize-y`} />
+                <textarea value={form.symptoms} onChange={(event) => setForm((prev) => ({ ...prev, symptoms: event.target.value }))} placeholder="Describe symptoms observed..." className={`${inputCls} min-h-[80px] resize-y`} />
               </InputField>
               <InputField label="Diagnosis" required error={errors.diagnosis}>
-                <textarea value={form.diagnosis} onChange={(event) => setForm((prev) => ({ ...prev, diagnosis: event.target.value }))} placeholder="Veterinarian's diagnosis..." className={`${inputCls} min-h-[80px] resize-y`} />
+                <textarea value={form.diagnosis} onChange={(event) => setForm((prev) => ({ ...prev, diagnosis: event.target.value }))} placeholder="Veterinarian diagnosis..." className={`${inputCls} min-h-[80px] resize-y`} />
               </InputField>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <InputField label="Treatment" required error={errors.treatment}>
-                  <input value={form.treatment} onChange={(event) => setForm((prev) => ({ ...prev, treatment: event.target.value }))} placeholder="Treatment given (optional)" className={inputCls} />
+                  <input value={form.treatment} onChange={(event) => setForm((prev) => ({ ...prev, treatment: event.target.value }))} placeholder="Treatment given" className={inputCls} />
                 </InputField>
                 <InputField label="Medication" optional>
-                  <input value={form.medication} onChange={(event) => setForm((prev) => ({ ...prev, medication: event.target.value }))} placeholder="Prescribed medication (optional)" className={inputCls} />
+                  <input value={form.medication} onChange={(event) => setForm((prev) => ({ ...prev, medication: event.target.value }))} placeholder="Prescribed medication" className={inputCls} />
                 </InputField>
                 <InputField label="Next Visit Date" optional>
-                  <input type="date" min={today} value={form.nextVisitDate} onChange={(event) => setForm((prev) => ({ ...prev, nextVisitDate: event.target.value }))} className={inputCls} />
+                  <input type="date" min={isEditing ? undefined : today} value={form.nextVisitDate} onChange={(event) => setForm((prev) => ({ ...prev, nextVisitDate: event.target.value }))} className={inputCls} />
                 </InputField>
-                <InputField label="Prescription" required error={errors.prescriptionFile}>
+                <InputField label="Prescription" required={!isEditing} optional={isEditing} error={errors.prescriptionFile}>
                   <label className="flex cursor-pointer items-center gap-2 rounded-xl border-[1.5px] border-dashed border-app-border bg-app-bg px-3.5 py-2.5 text-sm text-app-slate">
                     <input
                       type="file"
@@ -206,9 +238,9 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
                         }))
                       }
                     />
-                    📎 {form.prescriptionName || "Upload Prescription (PDF/Image)"}
+                    {form.prescriptionName || "Upload Prescription (PDF/Image)"}
                   </label>
-                  <p className="mt-1 text-[11px] text-app-slate">PDF, JPG, PNG · Max 5MB</p>
+                  <p className="mt-1 text-[11px] text-app-slate">PDF, JPG, PNG</p>
                 </InputField>
               </div>
             </div>
@@ -218,7 +250,7 @@ export default function MedicalHistoryModal({ isOpen, pet, onClose, onSaveRecord
         <div className="sticky bottom-0 z-10 flex gap-2 border-t border-app-border bg-white px-7 py-4">
           <button type="button" onClick={onClose} className="flex-1 rounded-full border border-app-border px-4 py-2 text-sm font-bold text-app-slate">Cancel</button>
           <button type="button" onClick={save} className={["flex-[1.6] rounded-full px-4 py-2 text-sm font-bold text-white transition", savedState ? "bg-app-green" : "bg-app-teal hover:bg-app-teal-dark"].join(" ")}>
-            {savedState ? "✓ Saved!" : "＋ Save Record"}
+            {savedState ? "Saved!" : isEditing ? "Update Record" : "Save Record"}
           </button>
         </div>
       </div>
