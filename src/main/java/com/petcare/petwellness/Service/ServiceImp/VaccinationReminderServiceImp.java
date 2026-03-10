@@ -104,7 +104,7 @@ public class VaccinationReminderServiceImp implements VaccinationReminderService
         String subject = "Vaccination reminder for " + petName;
         String body = "Hello,\n\n"
                 + petName + "'s vaccine (" + vaccineName + ") " + timingMessage + ".\n"
-                + "Next due date: " + dueDate + "\n\n"
+                + "Vaccination  date was: " + dueDate + "\n\n"
                 + "Please consult your veterinarian if needed.\n\n"
                 + "Regards,\nPet Wellness Team";
 

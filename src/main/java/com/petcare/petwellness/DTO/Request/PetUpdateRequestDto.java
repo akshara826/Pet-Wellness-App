@@ -1,4 +1,4 @@
-﻿package com.petcare.petwellness.DTO.Request;
+package com.petcare.petwellness.DTO.Request;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -7,8 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.petcare.petwellness.Enums.PetGender;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
