@@ -13,6 +13,7 @@ import com.petcare.petwellness.DTO.Request.ProductCreateRequestDto;
 import com.petcare.petwellness.DTO.Request.ProductUpdateRequestDto;
 import com.petcare.petwellness.DTO.Response.ProductResponseDto;
 import com.petcare.petwellness.Domain.Entity.Product;
+import com.petcare.petwellness.Enums.ProductCategory;
 import com.petcare.petwellness.Enums.ProductStatus;
 import com.petcare.petwellness.Exceptions.CustomException.BadRequestException;
 import com.petcare.petwellness.Exceptions.CustomException.ResourceNotFoundException;
@@ -136,7 +137,7 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductResponseDto> getProducts(int offset, int limit) {
+    public List<ProductResponseDto> getProducts(int offset, int limit, ProductCategory category) {
         validatePagination(offset, limit);
 
         PageRequest pageable = PageRequest.of(
@@ -145,7 +146,9 @@ public class ProductServiceImp implements ProductService {
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        return productRepository.findAll(pageable)
+        return (category == null
+                ? productRepository.findAll(pageable)
+                : productRepository.findByCategory(category, pageable))
                 .stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -153,7 +156,7 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductResponseDto> getPublicProducts(int offset, int limit) {
+    public List<ProductResponseDto> getPublicProducts(int offset, int limit, ProductCategory category) {
         validatePagination(offset, limit);
 
         PageRequest pageable = PageRequest.of(
@@ -163,7 +166,9 @@ public class ProductServiceImp implements ProductService {
         );
 
         List<ProductStatus> visibleStatuses = List.of(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK);
-        return productRepository.findByStatusIn(visibleStatuses, pageable)
+        return (category == null
+                ? productRepository.findByStatusIn(visibleStatuses, pageable)
+                : productRepository.findByStatusInAndCategory(visibleStatuses, category, pageable))
                 .stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());

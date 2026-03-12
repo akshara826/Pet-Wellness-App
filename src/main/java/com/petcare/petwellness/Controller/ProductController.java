@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.petcare.petwellness.DTO.Response.ProductResponseDto;
+import com.petcare.petwellness.Enums.ProductCategory;
 import com.petcare.petwellness.Service.ProductService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,7 +28,8 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductResponseDto>> getProducts(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(productService.getPublicProducts(offset, limit));
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) ProductCategory category) {
+        return ResponseEntity.ok(productService.getPublicProducts(offset, limit, category));
     }
 }
