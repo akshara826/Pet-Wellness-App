@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { NavLink, useLocation } from "react-router-dom";
 import { dashboardMenu } from "../../data/adminDashboardData";
 import type { DashboardMenuKey } from "../../types/adminDashboard";
 import {
@@ -7,7 +8,6 @@ import {
   DashboardIcon,
   LogoutIcon,
   PawIcon,
-  SettingsIcon,
   StoreIcon,
   UserCheckIcon,
 } from "./Icons";
@@ -28,7 +28,6 @@ function getIcon(key: DashboardMenuKey) {
   if (key === "pets") return <PawIcon className={className} />;
   if (key === "appointments") return <CalendarIcon className={className} />;
   if (key === "marketplace") return <StoreIcon className={className} />;
-  if (key === "settings") return <SettingsIcon className={className} />;
   return <LogoutIcon className={className} />;
 }
 
@@ -40,6 +39,8 @@ export default function Sidebar({
   onToggleCollapse,
   onCloseMobile,
 }: SidebarProps) {
+  const location = useLocation();
+
   return (
     <>
       {mobileOpen ? (
@@ -87,7 +88,31 @@ export default function Sidebar({
 
           <nav className="flex-1 space-y-1">
             {dashboardMenu.map((item) => {
-              const active = selected === item.key;
+              const active =
+                selected === item.key ||
+                (item.key === "marketplace" && location.pathname.startsWith("/admin/marketplace"));
+
+              if (item.key === "marketplace") {
+                return (
+                  <NavLink
+                    key={item.key}
+                    to="/admin/marketplace"
+                    onClick={() => {
+                      onSelect(item.key);
+                      onCloseMobile();
+                    }}
+                    className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition ${
+                      active
+                        ? "bg-teal-600 text-white shadow-md shadow-teal-300/60"
+                        : "text-slate-700 hover:bg-teal-100/70"
+                    }`}
+                  >
+                    {getIcon(item.key)}
+                    {!collapsed ? <span className="font-medium">{item.label}</span> : null}
+                  </NavLink>
+                );
+              }
+
               return (
                 <button
                   key={item.key}

@@ -4,7 +4,6 @@ export type DashboardMenuKey =
   | "pets"
   | "appointments"
   | "marketplace"
-  | "settings"
   | "logout";
 
 export type DashboardMenuItem = {

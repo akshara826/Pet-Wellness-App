@@ -17,93 +17,66 @@ function getErrorMessage(error) {
   return error?.message || "Request failed";
 }
 
-function getRoleFromToken(token) {
-  if (!token || typeof token !== "string") {
-    return "";
-  }
-
-  try {
-    const payloadPart = token.split(".")[1];
-    if (!payloadPart) {
-      return "";
-    }
-
-    const normalized = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(normalized);
-    const payload = JSON.parse(json);
-
-    return typeof payload?.role === "string" ? payload.role.toUpperCase() : "";
-  } catch {
-    return "";
-  }
-}
-
-function getNameFromToken(token) {
-  if (!token || typeof token !== "string") {
-    return "";
-  }
-
-  try {
-    const payloadPart = token.split(".")[1];
-    if (!payloadPart) {
-      return "";
-    }
-
-    const normalized = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(normalized);
-    const payload = JSON.parse(json);
-
-    const candidates = [payload?.fullName, payload?.name, payload?.firstName, payload?.username, payload?.sub];
-    const raw = candidates.find((value) => typeof value === "string" && value.trim());
-    if (!raw) return "";
-
-    const clean = raw.trim();
-    return clean.includes("@") ? clean.split("@")[0] : clean;
-  } catch {
-    return "";
-  }
-}
-
-function Login() {
+function ForgotPassword() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+  const [otpSent, setOtpSent] = useState(false);
   const [loadingAction, setLoadingAction] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleLogin = async (event) => {
+  const handleSendOtp = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    setLoadingAction("sendOtp");
+
+    try {
+      const response = await API.post("/auth/forgot-password/send-otp", { email });
+      setOtpSent(true);
+      setSuccess(typeof response.data === "string" ? response.data : "OTP sent successfully");
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoadingAction("");
+    }
+  };
+
+  const handleResetPassword = async (event) => {
     event.preventDefault();
     setError("");
     setSuccess("");
-    setLoadingAction("login");
+
+    if (!email.trim() || !otp.trim() || !newPassword) {
+      setError("Email, OTP, and new password are required.");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(otp)) {
+      setError("OTP must be exactly 6 digits.");
+      return;
+    }
+
+    setLoadingAction("reset");
 
     try {
-      const response = await API.post("/auth/login", { email, password });
-      const payload = response?.data || {};
-      const token = payload?.token || "";
-      const role = getRoleFromToken(token);
-      const tokenName = getNameFromToken(token);
+      const response = await API.post("/auth/forgot-password/reset", {
+        email,
+        otp,
+        newPassword,
+      });
 
-      if (token) {
-        localStorage.setItem("token", token);
-      }
-      if (tokenName) {
-        localStorage.setItem("userName", tokenName);
-      } else if (email) {
-        localStorage.setItem("userName", email.split("@")[0]);
-      }
-
-      if (payload.changePasswordRequired) {
-        setSuccess("Login successful. Redirecting to set a new password.");
-        navigate("/set-password");
-      } else {
-        setSuccess("Login successful. Navigating to your dashboard...");
-        navigate(role === "ADMIN" ? "/dashboard" : "/user-dashboard");
-      }
+      setSuccess(typeof response.data === "string" ? response.data : "Password reset successfully");
+      setTimeout(() => navigate("/login"), 900);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -138,18 +111,22 @@ function Login() {
         </div>
 
         <h1 className="text-center text-2xl font-bold tracking-tight text-slate-900">
-          Login to PetCare
+          Forgot Password
         </h1>
 
         {error ? <p className="status-message status-error">{error}</p> : null}
         {success ? <p className="status-message status-success">{success}</p> : null}
 
-        <form className="login-form grid gap-3" onSubmit={handleLogin}>
+        <div className="forgot-password-helper">
+          Enter your email, get the OTP, then set a new password.
+        </div>
+
+        <form className="login-form grid gap-3" onSubmit={handleResetPassword}>
           <div className="field-group stagger-1">
             <span className="field-icon" aria-hidden="true">✉️</span>
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Registered Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="login-input"
@@ -157,13 +134,47 @@ function Login() {
             />
           </div>
 
+          <button
+            type="button"
+            className={`login-button ${loadingAction === "sendOtp" ? "loading" : ""}`}
+            disabled={loadingAction === "sendOtp" || loadingAction === "reset"}
+            onClick={handleSendOtp}
+          >
+            <span className="button-shimmer" aria-hidden="true" />
+            <span className="button-content">
+              <span className="button-paw" aria-hidden="true">🐾</span>
+              <span className="button-label">
+                {loadingAction === "sendOtp" ? "Sending..." : otpSent ? "Resend OTP" : "Send OTP"}
+              </span>
+            </span>
+            <span className="loading-dots" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </button>
+
           <div className="field-group stagger-2">
+            <span className="field-icon" aria-hidden="true">✉️</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="6-digit OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              className="login-input"
+              required
+            />
+          </div>
+
+          <div className="field-group">
             <span className="field-icon" aria-hidden="true">🔒</span>
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               className="login-input w-full"
               required
             />
@@ -203,21 +214,17 @@ function Login() {
             </button>
           </div>
 
-          <div className="forgot-password-row">
-            <Link to="/forgot-password" className="forgot-password-link">
-              Forgot Password?
-            </Link>
-          </div>
-
           <button
             type="submit"
-            className={`login-button ${loadingAction === "login" ? "loading" : ""}`}
-            disabled={loadingAction === "login"}
+            className={`login-button ${loadingAction === "reset" ? "loading" : ""}`}
+            disabled={loadingAction === "sendOtp" || loadingAction === "reset"}
           >
             <span className="button-shimmer" aria-hidden="true" />
             <span className="button-content">
               <span className="button-paw" aria-hidden="true">🐾</span>
-              <span className="button-label">{loadingAction === "login" ? "Logging in..." : "Login"}</span>
+              <span className="button-label">
+                {loadingAction === "reset" ? "Resetting..." : "Reset Password"}
+              </span>
             </span>
             <span className="loading-dots" aria-hidden="true">
               <span />
@@ -228,11 +235,11 @@ function Login() {
         </form>
 
         <p className="login-footer text-sm text-slate-600">
-          Need an account? <Link to="/register" className="font-semibold text-sky-700">Register here</Link>
+          Back to login? <Link to="/login" className="font-semibold text-sky-700">Login here</Link>
         </p>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default ForgotPassword;
