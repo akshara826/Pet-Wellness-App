@@ -41,16 +41,15 @@ public class SecurityConfig {
                                 "/uploads/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(
-                                "/api/auth/send-otp",
-                                "/api/auth/verify-otp",
-                                "/api/auth/complete-profile",
-                                "/api/auth/registration",
-                                "/api/auth/login",
-                                "/api/auth/forgot-password/send-otp",
-                                "/api/auth/forgot-password/reset",
-                                "/api/test/reminders/vaccination/run"
-                        ).permitAll()
+                         .requestMatchers(
+                                 "/api/auth/send-otp",
+                                 "/api/auth/verify-otp",
+                                 "/api/auth/registration",
+                                 "/api/auth/login",
+                                 "/api/auth/forgot-password/send-otp",
+                                 "/api/auth/forgot-password/reset",
+                                 "/api/test/reminders/vaccination/run"
+                         ).permitAll()
                         .requestMatchers("/api/auth/set-password").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

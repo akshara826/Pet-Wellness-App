@@ -64,7 +64,7 @@ public class AuthController {
                     )
             )
     )
-    @PostMapping(value = {"/complete-profile", "/registration"}, consumes = "multipart/form-data")
+    @PostMapping(value = "/registration", consumes = "multipart/form-data")
     public ResponseEntity<LoginResponseDto> completeProfile(
             @Valid @ModelAttribute ProfileCompletionRequestDto request
     ) {

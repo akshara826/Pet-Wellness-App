@@ -57,6 +57,16 @@ jwt:
   secret: ${JWT_SECRET:dev-jwt-secret-key-256-bits-minimum-length}
   expiration: 86400000
 
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID:}
+  key-secret: ${RAZORPAY_KEY_SECRET:}
+  api-base: ${RAZORPAY_API_BASE:https://api.razorpay.com/v1}
+  reconcile:
+    enabled: ${RAZORPAY_RECONCILE_ENABLED:false}
+    delay-ms: ${RAZORPAY_RECONCILE_DELAY_MS:600000}
+    batch-size: ${RAZORPAY_RECONCILE_BATCH_SIZE:10}
+    min-age-minutes: ${RAZORPAY_RECONCILE_MIN_AGE_MINUTES:10}
+
 springdoc:
   api-docs:
     path: /v3/api-docs
