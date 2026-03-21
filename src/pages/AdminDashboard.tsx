@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import API from "../api/api";
+import { getAdminDashboardOverview } from "../api/services/adminDashboardService";
 import ActivityFeed from "../components/admin/ActivityFeed";
 import ApprovedUsersPanel from "../components/admin/ApprovedUsersPanel";
 import ChartsPanel from "../components/admin/ChartsPanel";
@@ -9,26 +11,51 @@ import Sidebar from "../components/admin/Sidebar";
 import StatsCard from "../components/admin/StatsCard";
 import ToastStack from "../components/admin/ToastStack";
 import TopNavbar from "../components/admin/TopNavbar";
-import { adminMetrics } from "../data/adminDashboardData";
 import type {
+  AdminDashboardOverview,
+  AdminMetric,
   ApprovedUser,
   DashboardMenuKey,
   PendingApproval,
   ToastItem,
   ToastType,
 } from "../types/adminDashboard";
+import { logoutUser } from "../utils/logout";
 
 type PendingUserApi = {
   id: number;
   email: string;
   fullName: string;
+  createdAt?: string;
 };
 
 type ApprovedUserApi = {
   id: number;
   fullName: string;
   email: string;
+  createdAt?: string;
 };
+
+const EMPTY_OVERVIEW: AdminDashboardOverview = {
+  totalRegisteredUsers: 0,
+  pendingApprovalRequests: 0,
+  appointmentsBooked: 0,
+  marketplaceListings: 0,
+  registrationTrend: [],
+  weeklyAppointments: [],
+  recentActivities: [],
+};
+
+function formatRegistrationDate(value?: string) {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "-";
+  return parsed.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 function getErrorMessage(error: unknown) {
   if (typeof error === "object" && error !== null && "response" in error) {
@@ -48,29 +75,51 @@ function getErrorMessage(error: unknown) {
 }
 
 export default function AdminDashboard() {
-  const [selectedMenu, setSelectedMenu] = useState<DashboardMenuKey>("dashboard");
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sectionFromUrl = searchParams.get("section");
+  const initialMenu: DashboardMenuKey = sectionFromUrl === "approvals" ? sectionFromUrl : "dashboard";
+  const [selectedMenu, setSelectedMenu] = useState<DashboardMenuKey>(initialMenu);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<ApprovedUser[]>([]);
   const [loadingApprovals, setLoadingApprovals] = useState(true);
   const [loadingApprovedUsers, setLoadingApprovedUsers] = useState(true);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
   const [deletingApprovedUserId, setDeletingApprovedUserId] = useState<number | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [dashboardOverview, setDashboardOverview] = useState<AdminDashboardOverview>(EMPTY_OVERVIEW);
 
   const metrics = useMemo(
-    () =>
-      adminMetrics.map((metric) => {
-        if (metric.key === "users") {
-          return { ...metric, value: pendingApprovals.length + approvedUsers.length };
-        }
-        if (metric.key === "pending") {
-          return { ...metric, value: pendingApprovals.length };
-        }
-        return metric;
-      }),
-    [approvedUsers.length, pendingApprovals.length]
+    (): AdminMetric[] => [
+      {
+        key: "users",
+        label: "Total Registered Users",
+        value: dashboardOverview.totalRegisteredUsers,
+        colorClass: "from-cyan-500 to-sky-600",
+      },
+      {
+        key: "pending",
+        label: "Pending Approval Requests",
+        value: dashboardOverview.pendingApprovalRequests,
+        colorClass: "from-amber-400 to-orange-500",
+      },
+      {
+        key: "appointments",
+        label: "Appointments Booked",
+        value: dashboardOverview.appointmentsBooked,
+        colorClass: "from-indigo-400 to-sky-600",
+      },
+      {
+        key: "listings",
+        label: "Marketplace Listings",
+        value: dashboardOverview.marketplaceListings,
+        colorClass: "from-teal-400 to-cyan-600",
+      },
+    ],
+    [dashboardOverview]
   );
 
   const pushToast = (message: string, type: ToastType) => {
@@ -85,17 +134,21 @@ export default function AdminDashboard() {
     setLoadingApprovals(true);
     setLoadingApprovedUsers(true);
     try {
-      const pendingRes = await API.get<PendingUserApi[]>("/admin/pending-users");
+      const pendingRes = await API.get<PendingUserApi[]>("/admin/pending-users", {
+        params: { offset: 0, limit: 1000 },
+      });
       let approvedUsersFromApi: ApprovedUser[] = [];
 
       try {
-        const approvedRes = await API.get<ApprovedUserApi[]>("/admin/approved-users");
+        const approvedRes = await API.get<ApprovedUserApi[]>("/admin/approved-users", {
+          params: { offset: 0, limit: 1000 },
+        });
         approvedUsersFromApi = (approvedRes.data || []).map((user) => ({
           id: user.id,
           name: user.fullName,
           email: user.email,
           role: "Pet Owner",
-          registrationDate: "-",
+          registrationDate: formatRegistrationDate(user.createdAt),
           status: "Approved",
         }));
       } catch (error) {
@@ -116,7 +169,7 @@ export default function AdminDashboard() {
         name: user.fullName,
         email: user.email,
         role: "Pet Owner",
-        registrationDate: "-",
+        registrationDate: formatRegistrationDate(user.createdAt),
         status: "Pending",
       }));
 
@@ -130,9 +183,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadDashboardOverview = async () => {
+    setLoadingDashboard(true);
+    try {
+      const overview = await getAdminDashboardOverview();
+      setDashboardOverview(overview);
+    } catch (error) {
+      pushToast(getErrorMessage(error), "error");
+    } finally {
+      setLoadingDashboard(false);
+    }
+  };
+
   useEffect(() => {
     void loadAdminUsers();
+    void loadDashboardOverview();
   }, []);
+
+  useEffect(() => {
+    const nextMenu: DashboardMenuKey = sectionFromUrl === "approvals" ? sectionFromUrl : "dashboard";
+    setSelectedMenu(nextMenu);
+  }, [sectionFromUrl]);
 
   const handleApprovalAction = async (item: PendingApproval, action: "approve" | "reject") => {
     setProcessingIds((prev) => [...prev, item.id]);
@@ -162,6 +233,7 @@ export default function AdminDashboard() {
       } else {
         pushToast(`${item.name} rejected`, "error");
       }
+      void loadDashboardOverview();
     } catch (error) {
       pushToast(getErrorMessage(error), "error");
     } finally {
@@ -177,10 +249,24 @@ export default function AdminDashboard() {
       });
       setApprovedUsers((prev) => prev.filter((item) => item.id !== user.id));
       pushToast(`${user.name} deleted successfully`, "success");
+      void loadDashboardOverview();
     } catch (error) {
       pushToast(getErrorMessage(error), "error");
     } finally {
       setDeletingApprovedUserId(null);
+    }
+  };
+
+  const handleSidebarSelect = (key: DashboardMenuKey) => {
+    if (key === "logout") {
+      logoutUser();
+      navigate("/", { replace: true });
+      return;
+    }
+
+    setSelectedMenu(key);
+    if (key === "dashboard" || key === "approvals") {
+      setSearchParams({ section: key });
     }
   };
 
@@ -190,7 +276,7 @@ export default function AdminDashboard() {
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
         selected={selectedMenu}
-        onSelect={setSelectedMenu}
+        onSelect={handleSidebarSelect}
         onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
         onCloseMobile={() => setMobileSidebarOpen(false)}
       />
@@ -208,7 +294,7 @@ export default function AdminDashboard() {
           transition={{ duration: 0.35 }}
           className="space-y-5 px-4 py-5 sm:px-6"
         >
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {metrics.map((metric) => (
               <StatsCard key={metric.key} metric={metric} />
             ))}
@@ -235,8 +321,12 @@ export default function AdminDashboard() {
                 />
               </motion.section>
 
-              <ChartsPanel />
-              <ActivityFeed />
+              <ChartsPanel
+                registrationTrend={dashboardOverview.registrationTrend}
+                weeklyAppointments={dashboardOverview.weeklyAppointments}
+                loading={loadingDashboard}
+              />
+              <ActivityFeed items={dashboardOverview.recentActivities} loading={loadingDashboard} />
             </>
           )}
         </motion.main>

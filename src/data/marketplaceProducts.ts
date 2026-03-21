@@ -7,7 +7,7 @@ type ProductSeed = Omit<Product, "status">;
 
 const seedProducts: ProductSeed[] = [
   {
-    id: "PRD-001",
+    id: 1,
     name: "Premium Dog Food - Adult",
     category: "Food",
     price: 899,
@@ -17,9 +17,10 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=300&fit=crop",
     createdDate: "2026-01-10",
+    brand: "Pet Wellness",
   },
   {
-    id: "PRD-002",
+    id: 2,
     name: "Interactive Puzzle Toy",
     category: "Toys",
     price: 349,
@@ -29,11 +30,12 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.pexels.com/photos/16010449/pexels-photo-16010449.jpeg?cs=srgb&dl=pexels-pinamon-16010449.jpg&fm=jpg",
     createdDate: "2026-01-15",
+    brand: "Pet Wellness",
   },
   {
-    id: "PRD-003",
+    id: 3,
     name: "Flea & Tick Treatment Drops",
-    category: "Medicine",
+    category: "Medicines",
     price: 450,
     stock: 0,
     description:
@@ -41,9 +43,10 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=300&fit=crop",
     createdDate: "2026-01-20",
+    brand: "Pet Wellness",
   },
   {
-    id: "PRD-004",
+    id: 4,
     name: "Adjustable Pet Harness",
     category: "Accessories",
     price: 599,
@@ -53,9 +56,10 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.pexels.com/photos/7210754/pexels-photo-7210754.jpeg?cs=srgb&dl=pexels-brett-sayles-7210754.jpg&fm=jpg",
     createdDate: "2026-01-25",
+    brand: "Pet Wellness",
   },
   {
-    id: "PRD-005",
+    id: 5,
     name: "Grain-Free Cat Kibble",
     category: "Food",
     price: 649,
@@ -65,9 +69,10 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.pexels.com/photos/17730048/pexels-photo-17730048.jpeg?cs=srgb&dl=pexels-yana-kangal-494677995-17730048.jpg&fm=jpg",
     createdDate: "2026-02-01",
+    brand: "Pet Wellness",
   },
   {
-    id: "PRD-006",
+    id: 6,
     name: "Catnip Plush Mouse",
     category: "Toys",
     price: 149,
@@ -77,11 +82,12 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.pexels.com/photos/16260949/pexels-photo-16260949.jpeg?cs=srgb&dl=pexels-jem-perez-193020997-16260949.jpg&fm=jpg",
     createdDate: "2026-02-05",
+    brand: "Pet Wellness",
   },
   {
-    id: "PRD-007",
+    id: 7,
     name: "Vitamin & Mineral Supplement",
-    category: "Medicine",
+    category: "Medicines",
     price: 320,
     stock: 35,
     description:
@@ -89,9 +95,10 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.pexels.com/photos/15897776/pexels-photo-15897776.jpeg?cs=srgb&dl=pexels-by-natallia-311038782-15897776.jpg&fm=jpg",
     createdDate: "2026-02-10",
+    brand: "Pet Wellness",
   },
   {
-    id: "PRD-008",
+    id: 8,
     name: "Stainless Steel Pet Bowl Set",
     category: "Accessories",
     price: 279,
@@ -101,6 +108,7 @@ const seedProducts: ProductSeed[] = [
     imageUrl:
       "https://images.pexels.com/photos/7781984/pexels-photo-7781984.jpeg?cs=srgb&dl=pexels-rdne-7781984.jpg&fm=jpg",
     createdDate: "2026-02-14",
+    brand: "Pet Wellness",
   },
 ];
 

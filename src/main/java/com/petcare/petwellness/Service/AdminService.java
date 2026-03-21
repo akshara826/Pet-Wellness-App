@@ -1,6 +1,7 @@
 package com.petcare.petwellness.Service;
 
 import com.petcare.petwellness.DTO.Request.AdminCreateOwnerRequestDto;
+import com.petcare.petwellness.DTO.Response.AdminDashboardResponseDto;
 import com.petcare.petwellness.DTO.Response.AdminUserProfileResponseDto;
 import com.petcare.petwellness.DTO.Response.ApprovedUserResponseDto;
 import com.petcare.petwellness.DTO.Response.PendingUserResponseDto;
@@ -9,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface AdminService {
+
+    AdminDashboardResponseDto getDashboardOverview();
 
     List<PendingUserResponseDto> getPendingUsers(int offset, int limit);
 

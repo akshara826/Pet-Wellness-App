@@ -1,6 +1,7 @@
 package com.petcare.petwellness.DTO.Response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import com.petcare.petwellness.Enums.ProductCategory;
 import com.petcare.petwellness.Enums.ProductStatus;
 
@@ -15,6 +16,7 @@ public class ProductResponseDto {
     private Integer stockQuantity;
     private ProductStatus status;
     private String image;
+    private LocalDateTime createdAt;
     
 
     public Long getId() {
@@ -87,6 +89,14 @@ public class ProductResponseDto {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
    

@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useMarketplace } from "../../context/MarketplaceContext";
 import { Category, Product, ProductStatus } from "../../types/marketplace";
+import type { AdminProductInput } from "../../api/services/adminProductService";
 
 type ProductFormModalProps = {
   isOpen: boolean;
@@ -8,6 +8,7 @@ type ProductFormModalProps = {
   onClose: () => void;
   onSaved: (message: string) => void;
   onRequestDelete: (product: Product) => void;
+  onSubmit: (payload: AdminProductInput, imageFile: File | null, productId?: number) => Promise<void>;
 };
 
 type FormState = {
@@ -38,12 +39,14 @@ const statusBadgeClass: Record<ProductStatus, string> = {
   "In Stock": "bg-[#ECFDF5] text-[#065F46]",
   "Low Stock": "bg-[#FFFBEB] text-[#92400E]",
   "Out of Stock": "bg-[#FEF2F2] text-[#991B1B]",
+  Inactive: "bg-[#F3F4F6] text-[#374151]",
 };
 
 const categoryBadgeClass: Record<Category, string> = {
   Food: "bg-[#ECFDF5] text-[#065F46]",
   Toys: "bg-[#EFF6FF] text-[#1E40AF]",
-  Medicine: "bg-[#FEF2F2] text-[#991B1B]",
+  Grooming: "bg-[#FCE7F3] text-[#9D174D]",
+  Medicines: "bg-[#FEF2F2] text-[#991B1B]",
   Accessories: "bg-[#F5F3FF] text-[#5B21B6]",
 };
 
@@ -53,8 +56,8 @@ export default function ProductFormModal({
   onClose,
   onSaved,
   onRequestDelete,
+  onSubmit,
 }: ProductFormModalProps) {
-  const { addProduct, updateProduct } = useMarketplace();
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [imagePreview, setImagePreview] = useState("");
@@ -116,8 +119,8 @@ export default function ProductFormModal({
       return;
     }
     const validType = ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(file.type);
-    if (!validType || file.size > 5 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, image: "Upload JPG/PNG up to 5MB." }));
+    if (!validType || file.size > 10 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, image: "Upload JPG/PNG/WEBP up to 10MB." }));
       return;
     }
     setImageFile(file);
@@ -142,7 +145,10 @@ export default function ProductFormModal({
       next.price = "Price must be greater than 0.";
     }
     if (form.stock === "" || Number.isNaN(stock) || stock < 0) {
-      next.stock = "Stock must be 0 or more.";
+      next.stock = editingProduct ? "Stock must be 0 or more." : "Stock must be greater than 0.";
+    }
+    if (!editingProduct && stock === 0) {
+      next.stock = "New products must start with stock greater than 0.";
     }
     if (!trimmedDescription || trimmedDescription.length < 10) {
       next.description = "Description must be at least 10 characters.";
@@ -150,8 +156,8 @@ export default function ProductFormModal({
     if (!editingProduct && !imagePreview) {
       next.image = "Product image is required.";
     }
-    if (editingProduct && !imagePreview && !editingProduct.imageUrl) {
-      next.image = "Product image is required.";
+    if (editingProduct && !imagePreview) {
+      next.image = "Upload a replacement image or keep the current one.";
     }
 
     setErrors(next);
@@ -165,39 +171,25 @@ export default function ProductFormModal({
       return;
     }
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    if (editingProduct) {
-      updateProduct(
-        editingProduct.id,
+    try {
+      await onSubmit(
         {
           name: check.trimmedName,
           category: form.category as Category,
           price: check.price,
           stock: check.stock,
           description: check.trimmedDescription,
-          imageUrl: imagePreview,
+          brand: editingProduct?.brand || "Pet Wellness",
         },
-        imageFile
+        imageFile,
+        editingProduct?.id
       );
-      onSaved("Product updated successfully.");
-    } else {
-      addProduct(
-        {
-          name: check.trimmedName,
-          category: form.category as Category,
-          price: check.price,
-          stock: check.stock,
-          description: check.trimmedDescription,
-          imageUrl: imagePreview,
-        },
-        imageFile
-      );
-      onSaved("Product added successfully.");
+      onSaved(editingProduct ? "Product updated successfully." : "Product added successfully.");
+      onClose();
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsSaving(false);
-    onClose();
   };
 
   return (
@@ -268,7 +260,8 @@ export default function ProductFormModal({
                     <option value="">Select category</option>
                     <option value="Food">Food</option>
                     <option value="Toys">Toys</option>
-                    <option value="Medicine">Medicine</option>
+                    <option value="Grooming">Grooming</option>
+                    <option value="Medicines">Medicines</option>
                     <option value="Accessories">Accessories</option>
                   </select>
                   {errors.category ? <p className="mt-1 text-[11px] text-[#DC2626]">{errors.category}</p> : null}
@@ -307,7 +300,9 @@ export default function ProductFormModal({
                     onChange={(event) => setField("stock", event.target.value)}
                     className={`${inputBase} ${errors.stock ? "border-[#EF4444]" : ""}`}
                   />
-                  <p className="mt-1 text-[10px] text-[#6B7280]">Set 0 for out of stock</p>
+                  <p className="mt-1 text-[10px] text-[#6B7280]">
+                    {editingProduct ? "Set 0 for out of stock" : "New products require stock above 0"}
+                  </p>
                   {errors.stock ? <p className="mt-1 text-[11px] text-[#DC2626]">{errors.stock}</p> : null}
                 </div>
               </div>
@@ -385,7 +380,7 @@ export default function ProductFormModal({
                       <p className="text-2xl">📷</p>
                       <p className="mt-1 text-[12px] font-semibold text-[#111827]">Upload Image</p>
                       <p className="text-[11px] text-[#6B7280]">Click or drag & drop</p>
-                      <p className="text-[10px] text-[#6B7280]">JPG PNG Max 5MB</p>
+                      <p className="text-[10px] text-[#6B7280]">JPG PNG WEBP Max 10MB</p>
                     </div>
                   )}
                 </label>

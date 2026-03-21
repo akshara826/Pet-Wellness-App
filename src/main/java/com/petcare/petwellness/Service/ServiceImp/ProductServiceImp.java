@@ -1,9 +1,12 @@
 package com.petcare.petwellness.Service.ServiceImp;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,9 @@ public class ProductServiceImp implements ProductService {
 
     private final ProductRepository productRepository;
     private final FileStorageUtil fileStorageUtil;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     public ProductServiceImp(ProductRepository productRepository, FileStorageUtil fileStorageUtil) {
         this.productRepository = productRepository;
@@ -194,7 +200,8 @@ public class ProductServiceImp implements ProductService {
         dto.setBrand(product.getBrand());
         dto.setStockQuantity(product.getStockQuantity());
         dto.setStatus(product.getStatus());
-        dto.setImage(product.getImage());
+        dto.setImage(toPublicFileUrl(product.getImage()));
+        dto.setCreatedAt(product.getCreatedAt());
         return dto;
     }
 
@@ -244,6 +251,21 @@ public class ProductServiceImp implements ProductService {
 
         if (image.getSize() > MAX_PRODUCT_IMAGE_BYTES) {
             throw new BadRequestException("Product image size must be <= 10MB");
+        }
+    }
+
+    private String toPublicFileUrl(String absolutePath) {
+        if (absolutePath == null || absolutePath.isBlank()) {
+            return null;
+        }
+
+        try {
+            Path basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path filePath = Paths.get(absolutePath).toAbsolutePath().normalize();
+            Path relative = basePath.relativize(filePath);
+            return "/uploads/" + relative.toString().replace("\\", "/");
+        } catch (RuntimeException ex) {
+            return null;
         }
     }
 }

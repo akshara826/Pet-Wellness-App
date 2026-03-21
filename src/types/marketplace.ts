@@ -1,9 +1,14 @@
-export type Category = "Food" | "Toys" | "Medicine" | "Accessories";
+export type Category =
+  | "Food"
+  | "Toys"
+  | "Grooming"
+  | "Medicines"
+  | "Accessories";
 
-export type ProductStatus = "In Stock" | "Low Stock" | "Out of Stock";
+export type ProductStatus = "In Stock" | "Low Stock" | "Out of Stock" | "Inactive";
 
 export interface Product {
-  id: string;
+  id: number;
   name: string;
   category: Category;
   price: number;
@@ -12,4 +17,5 @@ export interface Product {
   imageUrl: string;
   status: ProductStatus;
   createdDate: string;
+  brand: string;
 }

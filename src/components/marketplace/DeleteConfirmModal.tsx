@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useMarketplace } from "../../context/MarketplaceContext";
 import { Product } from "../../types/marketplace";
 
 type DeleteConfirmModalProps = {
@@ -11,13 +10,12 @@ type DeleteConfirmModalProps = {
 const categoryClasses = {
   Food: "bg-[#ECFDF5] text-[#065F46]",
   Toys: "bg-[#EFF6FF] text-[#1E40AF]",
-  Medicine: "bg-[#FEF2F2] text-[#991B1B]",
+  Grooming: "bg-[#FCE7F3] text-[#9D174D]",
+  Medicines: "bg-[#FEF2F2] text-[#991B1B]",
   Accessories: "bg-[#F5F3FF] text-[#5B21B6]",
 } as const;
 
 export default function DeleteConfirmModal({ product, onCancel, onConfirm }: DeleteConfirmModalProps) {
-  useMarketplace();
-
   useEffect(() => {
     if (!product) {
       return;

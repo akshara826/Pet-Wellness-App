@@ -281,28 +281,12 @@ export default function Dashboard() {
     () => [
       { label: "Dashboard", icon: "\uD83C\uDFE0", to: "/user-dashboard", activeRoute: true, section: "MAIN" },
       { label: "My Pets", icon: "\uD83D\uDC36", to: "/pets", section: "MAIN" },
-      {
-        label: "Appointments",
-        icon: "\uD83D\uDCC5",
-        to: "/user-dashboard",
-        badge: String(appointments.length),
-        badgeTone: "teal",
-        section: "MAIN",
-      },
-      {
-        label: "Vaccinations",
-        icon: "\uD83D\uDC89",
-        to: "/user-dashboard",
-        badge: String(dueVaccinesCount),
-        badgeTone: dueVaccinesCount ? "red" : "teal",
-        section: "MAIN",
-      },
-      { label: "Marketplace", icon: "\uD83D\uDED2", to: "/marketplace", section: "MORE" },
-      { label: "My Orders", icon: "\uD83D\uDCE6", to: "/user-dashboard", section: "MORE" },
-      { label: "Health Records", icon: "\uD83D\uDCCB", to: "/user-dashboard", section: "MORE" },
-      { label: "Settings", icon: "\u2699\uFE0F", to: "/user-dashboard", section: "MORE" },
+      { label: "Appointments", icon: "\uD83D\uDCC5", to: "/appointments", section: "MAIN" },
+      { label: "Marketplace", icon: "\uD83D\uDECD\uFE0F", to: "/marketplace", section: "MORE" },
+      { label: "Cart", icon: "\uD83D\uDED2", to: "/cart", section: "MORE" },
+      { label: "My Orders", icon: "\uD83D\uDCE6", to: "/my-orders", section: "MORE" },
     ],
-    [appointments.length, dueVaccinesCount]
+    []
   );
 
   return (

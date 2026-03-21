@@ -1,4 +1,3 @@
-import { useMarketplace } from "../../context/MarketplaceContext";
 import { Category, Product, ProductStatus } from "../../types/marketplace";
 
 type ProductGridProps = {
@@ -11,7 +10,8 @@ type ProductGridProps = {
 const categoryClasses: Record<Category, string> = {
   Food: "bg-[#ECFDF5] text-[#065F46]",
   Toys: "bg-[#EFF6FF] text-[#1E40AF]",
-  Medicine: "bg-[#FEF2F2] text-[#991B1B]",
+  Grooming: "bg-[#FCE7F3] text-[#9D174D]",
+  Medicines: "bg-[#FEF2F2] text-[#991B1B]",
   Accessories: "bg-[#F5F3FF] text-[#5B21B6]",
 };
 
@@ -19,11 +19,10 @@ const statusClasses: Record<ProductStatus, string> = {
   "In Stock": "bg-[#ECFDF5]/95 text-[#065F46]",
   "Low Stock": "bg-[#FFFBEB]/95 text-[#92400E]",
   "Out of Stock": "bg-[#FEF2F2]/95 text-[#991B1B]",
+  Inactive: "bg-[#F3F4F6]/95 text-[#374151]",
 };
 
 export default function ProductGrid({ products, onView, onEdit, onDelete }: ProductGridProps) {
-  useMarketplace();
-
   if (!products.length) {
     return (
       <div className="rounded-lg border border-[#E5E7EB] bg-white py-16 text-center">

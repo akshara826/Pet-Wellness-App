@@ -1,9 +1,12 @@
 package com.petcare.petwellness.Service.ServiceImp;
 
 import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,9 @@ public class CartServiceImp implements CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     public CartServiceImp(CartRepository cartRepository,
                           CartItemRepository cartItemRepository,
@@ -187,10 +193,25 @@ public class CartServiceImp implements CartService {
         dto.setProductId(product.getId());
         dto.setProductName(product.getProductName());
         dto.setPrice(price);
-        dto.setImage(product.getImage());
+        dto.setImage(toPublicFileUrl(product.getImage()));
         dto.setQuantity(item.getQuantity());
         dto.setLineTotal(lineTotal);
         dto.setStatus(product.getStatus());
         return dto;
+    }
+
+    private String toPublicFileUrl(String absolutePath) {
+        if (absolutePath == null || absolutePath.isBlank()) {
+            return null;
+        }
+
+        try {
+            Path basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path filePath = Paths.get(absolutePath).toAbsolutePath().normalize();
+            Path relative = basePath.relativize(filePath);
+            return "/uploads/" + relative.toString().replace("\\", "/");
+        } catch (RuntimeException ex) {
+            return null;
+        }
     }
 }

@@ -1,7 +1,7 @@
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import type { AdminMetric } from "../../types/adminDashboard";
-import { CalendarIcon, PawIcon, StoreIcon, UserCheckIcon } from "./Icons";
+import { CalendarIcon, StoreIcon, UserCheckIcon } from "./Icons";
 
 type StatsCardProps = {
   metric: AdminMetric;
@@ -11,7 +11,6 @@ function MetricIcon({ metricKey }: { metricKey: string }) {
   const className = "h-6 w-6";
   if (metricKey === "users") return <UserCheckIcon className={className} />;
   if (metricKey === "pending") return <UserCheckIcon className={className} />;
-  if (metricKey === "pets") return <PawIcon className={className} />;
   if (metricKey === "appointments") return <CalendarIcon className={className} />;
   return <StoreIcon className={className} />;
 }

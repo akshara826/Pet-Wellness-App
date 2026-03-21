@@ -1,5 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  createAdminProduct,
+  deleteAdminProduct,
+  getAdminProducts,
+  updateAdminProduct,
+  type AdminProductInput,
+} from "../api/services/adminProductService";
 import DeleteConfirmModal from "../components/marketplace/DeleteConfirmModal";
 import MarketplaceStatStrip from "../components/marketplace/MarketplaceStatStrip";
 import ProductDetailModal from "../components/marketplace/ProductDetailModal";
@@ -8,8 +15,8 @@ import ProductGrid from "../components/marketplace/ProductGrid";
 import ProductTable from "../components/marketplace/ProductTable";
 import Sidebar from "../components/admin/Sidebar";
 import TopNavbar from "../components/admin/TopNavbar";
-import { MarketplaceProvider, useMarketplace } from "../context/MarketplaceContext";
 import { Product } from "../types/marketplace";
+import { logoutUser } from "../utils/logout";
 
 type ToastTone = "success" | "error" | "info";
 
@@ -65,9 +72,11 @@ function ToastStack({ toasts }: { toasts: ToastItem[] }) {
 
 function MarketplaceContent() {
   const navigate = useNavigate();
-  const { products, deleteProduct } = useMarketplace();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
@@ -85,6 +94,60 @@ function MarketplaceContent() {
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 2500);
+  };
+
+  const loadProducts = async () => {
+    setIsLoading(true);
+    setLoadError("");
+
+    try {
+      const nextProducts = await getAdminProducts();
+      setProducts(nextProducts);
+    } catch (error: any) {
+      setLoadError(error?.response?.data?.message || error?.message || "Failed to load products.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadProducts();
+  }, []);
+
+  const handleSaveProduct = async (payload: AdminProductInput, imageFile: File | null, productId?: number) => {
+    if (!imageFile && !productId) {
+      throw new Error("Product image is required.");
+    }
+
+    try {
+      const savedProduct = productId
+        ? await updateAdminProduct(productId, payload, imageFile)
+        : await createAdminProduct(payload, imageFile as File);
+
+      setProducts((current) => {
+        if (productId) {
+          return current.map((product) => (product.id === savedProduct.id ? savedProduct : product));
+        }
+        return [savedProduct, ...current];
+      });
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || "Failed to save product.";
+      pushToast(message, "error");
+      throw error;
+    }
+  };
+
+  const handleDeleteProduct = async (product: Product) => {
+    try {
+      await deleteAdminProduct(product.id);
+      setProducts((current) => current.filter((item) => item.id !== product.id));
+      setDeletingProduct(null);
+      setViewingProduct((current) => (current?.id === product.id ? null : current));
+      setEditingProduct((current) => (current?.id === product.id ? null : current));
+      pushToast("Product deleted.", "error");
+    } catch (error: any) {
+      pushToast(error?.response?.data?.message || error?.message || "Failed to delete product.", "error");
+    }
   };
 
   const filteredProducts = useMemo(() => {
@@ -117,6 +180,7 @@ function MarketplaceContent() {
       "In Stock": products.filter((p) => p.status === "In Stock").length,
       "Low Stock": products.filter((p) => p.status === "Low Stock").length,
       "Out of Stock": products.filter((p) => p.status === "Out of Stock").length,
+      Inactive: products.filter((p) => p.status === "Inactive").length,
     }),
     [products]
   );
@@ -133,7 +197,8 @@ function MarketplaceContent() {
             return;
           }
           if (key === "logout") {
-            navigate("/login");
+            logoutUser();
+            navigate("/", { replace: true });
             return;
           }
           navigate("/dashboard");
@@ -167,7 +232,7 @@ function MarketplaceContent() {
 
           <section className="rounded-lg border border-[#E5E7EB] bg-white p-1">
             <div className="flex flex-wrap gap-1">
-              {(["All", "In Stock", "Low Stock", "Out of Stock"] as const).map((status) => {
+              {(["All", "In Stock", "Low Stock", "Out of Stock", "Inactive"] as const).map((status) => {
                 const active = statusFilter === status;
                 return (
                   <button
@@ -209,7 +274,8 @@ function MarketplaceContent() {
                   <option value="All">All Categories</option>
                   <option value="Food">Food</option>
                   <option value="Toys">Toys</option>
-                  <option value="Medicine">Medicine</option>
+                  <option value="Grooming">Grooming</option>
+                  <option value="Medicines">Medicines</option>
                   <option value="Accessories">Accessories</option>
                 </select>
                 <select
@@ -252,7 +318,22 @@ function MarketplaceContent() {
             </div>
           </section>
 
-          {viewMode === "table" ? (
+          {isLoading ? (
+            <section className="rounded-lg border border-[#E5E7EB] bg-white py-16 text-center">
+              <p className="text-sm font-semibold text-[#111827]">Loading products...</p>
+            </section>
+          ) : loadError ? (
+            <section className="rounded-lg border border-[#E5E7EB] bg-white py-16 text-center">
+              <p className="text-sm font-semibold text-[#111827]">{loadError}</p>
+              <button
+                type="button"
+                onClick={() => void loadProducts()}
+                className="mt-4 rounded-lg bg-[#0D9488] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#0B7E75]"
+              >
+                Retry
+              </button>
+            </section>
+          ) : viewMode === "table" ? (
             <ProductTable
               products={filteredProducts}
               totalCount={products.length}
@@ -282,6 +363,7 @@ function MarketplaceContent() {
       <ProductFormModal
         isOpen={addModalOpen || Boolean(editingProduct)}
         editingProduct={editingProduct}
+        onSubmit={handleSaveProduct}
         onClose={() => {
           setAddModalOpen(false);
           setEditingProduct(null);
@@ -311,11 +393,7 @@ function MarketplaceContent() {
       <DeleteConfirmModal
         product={deletingProduct}
         onCancel={() => setDeletingProduct(null)}
-        onConfirm={(product) => {
-          deleteProduct(product.id);
-          setDeletingProduct(null);
-          pushToast("Product deleted.", "error");
-        }}
+        onConfirm={(product) => void handleDeleteProduct(product)}
       />
 
       <ToastStack toasts={toasts} />
@@ -324,9 +402,5 @@ function MarketplaceContent() {
 }
 
 export default function Marketplace() {
-  return (
-    <MarketplaceProvider>
-      <MarketplaceContent />
-    </MarketplaceProvider>
-  );
+  return <MarketplaceContent />;
 }

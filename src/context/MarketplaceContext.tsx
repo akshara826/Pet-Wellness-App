@@ -5,8 +5,8 @@ import { Product, ProductStatus } from "../types/marketplace";
 interface MarketplaceContextType {
   products: Product[];
   addProduct: (p: Omit<Product, "id" | "createdDate" | "status">, imageFile: File | null) => void;
-  updateProduct: (id: string, p: Partial<Product>, imageFile: File | null) => void;
-  deleteProduct: (id: string) => void;
+  updateProduct: (id: number, p: Partial<Product>, imageFile: File | null) => void;
+  deleteProduct: (id: number) => void;
 }
 
 const MarketplaceContext = createContext<MarketplaceContextType | null>(null);
@@ -24,7 +24,7 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     const imageUrl = imageFile ? URL.createObjectURL(imageFile) : data.imageUrl || "";
     const newProduct: Product = {
       ...data,
-      id: `PRD-${Date.now().toString().slice(-4)}`,
+      id: Date.now(),
       status: computeStatus(data.stock),
       imageUrl,
       createdDate: new Date().toISOString().split("T")[0],
@@ -32,7 +32,7 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     setProducts((prev) => [newProduct, ...prev]);
   };
 
-  const updateProduct = (id: string, data: Partial<Product>, imageFile: File | null) => {
+  const updateProduct = (id: number, data: Partial<Product>, imageFile: File | null) => {
     setProducts((prev) =>
       prev.map((product) => {
         if (product.id !== id) {
@@ -50,7 +50,7 @@ export function MarketplaceProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const deleteProduct = (id: string) => {
+  const deleteProduct = (id: number) => {
     setProducts((prev) => prev.filter((product) => product.id !== id));
   };
 

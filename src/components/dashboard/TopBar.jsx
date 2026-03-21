@@ -9,6 +9,9 @@ export default function TopBar({
   onPrimaryAction,
   addDisabled = false,
   addTooltip = "",
+  title,
+  subtitle,
+  actions,
 }) {
   if (variant === "pets") {
     return (
@@ -65,6 +68,30 @@ export default function TopBar({
     );
   }
 
+  if (variant === "page") {
+    return (
+      <div className="rounded-2xl border border-app-border bg-app-card px-4 py-4 shadow-sm sm:px-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={onOpenSidebar}
+              className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-app-border bg-app-card text-app-navy md:hidden"
+            >
+              {"\u2630"}
+            </button>
+            <div>
+              <h1 className="text-[22px] font-extrabold text-app-navy">{title}</h1>
+              <p className="mt-1 text-[13px] text-app-slate">{subtitle}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">{actions}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-app-border bg-app-card px-4 py-4 shadow-sm sm:px-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -80,7 +107,9 @@ export default function TopBar({
             <h1 className="text-2xl font-bold text-app-navy sm:text-3xl">
               Welcome, <span className="text-app-teal">{userName}</span> {"\uD83C\uDF3F"}
             </h1>
-            <p className="mt-1 text-sm text-app-slate">{dateText} - {petsCount} pets registered</p>
+            <p className="mt-1 text-sm text-app-slate">
+              {dateText} - {petsCount} pets registered
+            </p>
           </div>
         </div>
 

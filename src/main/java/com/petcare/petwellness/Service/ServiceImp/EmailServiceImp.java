@@ -31,7 +31,11 @@ public class EmailServiceImp implements EmailService {
         try {
             mailSender.send(message);
         } catch (MailException ex) {
-            throw new RuntimeException("Failed to send email via SMTP: " + ex.getMessage(), ex);
+            throw new RuntimeException(
+                    "Failed to send email via SMTP. Check MAIL_USERNAME, MAIL_PASSWORD, Gmail App Password, and whether the backend loaded secrets.properties. Root cause: "
+                            + ex.getMessage(),
+                    ex
+            );
         }
     }
 }

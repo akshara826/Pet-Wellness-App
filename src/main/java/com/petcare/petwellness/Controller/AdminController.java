@@ -2,6 +2,7 @@ package com.petcare.petwellness.Controller;
 
 import com.petcare.petwellness.DTO.Request.AdminCreateOwnerRequestDto;
 import com.petcare.petwellness.DTO.Request.AdminRejectUserRequestDto;
+import com.petcare.petwellness.DTO.Response.AdminDashboardResponseDto;
 import com.petcare.petwellness.DTO.Response.AdminUserProfileResponseDto;
 import com.petcare.petwellness.DTO.Response.ApprovedUserResponseDto;
 import com.petcare.petwellness.DTO.Response.PendingUserResponseDto;
@@ -29,6 +30,11 @@ public class AdminController {
 
     public AdminController(AdminService adminService) {
         this.adminService = adminService;
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<AdminDashboardResponseDto> getDashboardOverview() {
+        return ResponseEntity.ok(adminService.getDashboardOverview());
     }
 
     @GetMapping("/pending-users")

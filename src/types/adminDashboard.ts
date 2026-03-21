@@ -1,8 +1,9 @@
 export type DashboardMenuKey =
   | "dashboard"
   | "approvals"
-  | "pets"
+  | "createOwner"
   | "appointments"
+  | "orders"
   | "marketplace"
   | "logout";
 
@@ -51,6 +52,16 @@ export type ActivityItem = {
   text: string;
   time: string;
   tone: "info" | "success" | "warning";
+};
+
+export type AdminDashboardOverview = {
+  totalRegisteredUsers: number;
+  pendingApprovalRequests: number;
+  appointmentsBooked: number;
+  marketplaceListings: number;
+  registrationTrend: RegistrationPoint[];
+  weeklyAppointments: AppointmentPoint[];
+  recentActivities: ActivityItem[];
 };
 
 export type ToastType = "success" | "error";

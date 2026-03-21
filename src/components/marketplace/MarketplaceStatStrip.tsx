@@ -1,16 +1,13 @@
-import { useMarketplace } from "../../context/MarketplaceContext";
 import { Product } from "../../types/marketplace";
 
 type MarketplaceStatStripProps = {
-  products?: Product[];
+  products: Product[];
 };
 
 const cardBase = "rounded-lg border border-[#E5E7EB] bg-white px-[18px] py-[14px]";
 
 export default function MarketplaceStatStrip({ products }: MarketplaceStatStripProps) {
-  const { products: contextProducts } = useMarketplace();
-  const rows = products ?? contextProducts;
-
+  const rows = products;
   const inStock = rows.filter((p) => p.status === "In Stock").length;
   const lowStock = rows.filter((p) => p.status === "Low Stock").length;
   const outOfStock = rows.filter((p) => p.status === "Out of Stock").length;

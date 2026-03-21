@@ -29,12 +29,10 @@ const colorCycle = ["c1", "c2", "c3", "c4", "c5"];
 const navItems = [
   { label: "Dashboard", icon: "🏠", to: "/user-dashboard", section: "MAIN" },
   { label: "My Pets", icon: "🐶", to: "/pets", activeRoute: true, section: "MAIN" },
-  { label: "Appointments", icon: "📅", to: "/user-dashboard", badge: "2", badgeTone: "teal", section: "MAIN" },
-  { label: "Vaccinations", icon: "💉", to: "/user-dashboard", badge: "1", badgeTone: "red", section: "MAIN" },
-  { label: "Marketplace", icon: "🛒", to: "/marketplace", section: "MORE" },
-  { label: "My Orders", icon: "📦", to: "/user-dashboard", section: "MORE" },
-  { label: "Health Records", icon: "📋", to: "/user-dashboard", section: "MORE" },
-  { label: "Settings", icon: "⚙️", to: "/user-dashboard", section: "MORE" },
+  { label: "Appointments", icon: "📅", to: "/appointments", section: "MAIN" },
+  { label: "Marketplace", icon: "🛍️", to: "/marketplace", section: "MORE" },
+  { label: "Cart", icon: "🛒", to: "/cart", section: "MORE" },
+  { label: "My Orders", icon: "📦", to: "/my-orders", section: "MORE" },
 ];
 
 function decodeJwtPayload(token) {

@@ -1,15 +1,18 @@
 import { motion } from "framer-motion";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { dashboardMenu } from "../../data/adminDashboardData";
 import type { DashboardMenuKey } from "../../types/adminDashboard";
+import { logoutUser } from "../../utils/logout";
 import {
   CalendarIcon,
+  CartIcon,
   ChevronLeftIcon,
   DashboardIcon,
   LogoutIcon,
   PawIcon,
   StoreIcon,
   UserCheckIcon,
+  UserPlusIcon,
 } from "./Icons";
 
 type SidebarProps = {
@@ -25,8 +28,9 @@ function getIcon(key: DashboardMenuKey) {
   const className = "h-5 w-5";
   if (key === "dashboard") return <DashboardIcon className={className} />;
   if (key === "approvals") return <UserCheckIcon className={className} />;
-  if (key === "pets") return <PawIcon className={className} />;
+  if (key === "createOwner") return <UserPlusIcon className={className} />;
   if (key === "appointments") return <CalendarIcon className={className} />;
+  if (key === "orders") return <CartIcon className={className} />;
   if (key === "marketplace") return <StoreIcon className={className} />;
   return <LogoutIcon className={className} />;
 }
@@ -34,12 +38,14 @@ function getIcon(key: DashboardMenuKey) {
 export default function Sidebar({
   collapsed,
   mobileOpen,
-  selected,
+  selected: _selected,
   onSelect,
   onToggleCollapse,
   onCloseMobile,
 }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dashboardSection = new URLSearchParams(location.search).get("section") || "dashboard";
 
   return (
     <>
@@ -89,16 +95,30 @@ export default function Sidebar({
           <nav className="flex-1 space-y-1">
             {dashboardMenu.map((item) => {
               const active =
-                selected === item.key ||
+                ((item.key === "dashboard" || item.key === "approvals") &&
+                  location.pathname === "/dashboard" &&
+                  dashboardSection === item.key) ||
+                (item.key === "createOwner" && location.pathname.startsWith("/admin/create-owner")) ||
+                (item.key === "appointments" && location.pathname.startsWith("/admin/appointments")) ||
+                (item.key === "orders" && location.pathname.startsWith("/admin/orders")) ||
                 (item.key === "marketplace" && location.pathname.startsWith("/admin/marketplace"));
 
-              if (item.key === "marketplace") {
+              if (item.key !== "logout") {
+                const to =
+                  item.key === "dashboard" || item.key === "approvals"
+                    ? `/dashboard?section=${item.key}`
+                    : item.key === "createOwner"
+                    ? "/admin/create-owner"
+                    : item.key === "appointments"
+                    ? "/admin/appointments"
+                    : item.key === "orders"
+                    ? "/admin/orders"
+                    : "/admin/marketplace";
                 return (
                   <NavLink
                     key={item.key}
-                    to="/admin/marketplace"
+                    to={to}
                     onClick={() => {
-                      onSelect(item.key);
                       onCloseMobile();
                     }}
                     className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition ${
@@ -118,6 +138,12 @@ export default function Sidebar({
                   key={item.key}
                   type="button"
                   onClick={() => {
+                    if (item.key === "logout") {
+                      logoutUser();
+                      onCloseMobile();
+                      navigate("/", { replace: true });
+                      return;
+                    }
                     onSelect(item.key);
                     onCloseMobile();
                   }}
